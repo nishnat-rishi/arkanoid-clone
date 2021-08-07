@@ -31,10 +31,10 @@ function love.load()
   original_map = {
     {1, 0, 1, 1, 1, 1, 0, 1},
     {0, 0, 0, 1, 1, 0, 0, 0},
-    {0, 1, 0, 0, 0, 0, 1, 0},
+    {0, 1, 0, 1, 1, 0, 1, 0},
     {1, 0, 1, 1, 1, 1, 0, 1},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1},
     {0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0},
@@ -47,7 +47,7 @@ function love.load()
   
   map = u.copy2d(original_map)
 
-  base = {x = 80, y = 40}
+  base = {x = 80, y = 60}
   brick = {x = 80, y = 40}
   dims = {x = #map[1], y = #map}
   
@@ -58,9 +58,9 @@ function love.load()
 
   paddle = {
     x = base.x, 
-    y = dims.y * brick.y - 4, 
+    y = base.y + (dims.y - 1) * brick.y + 4, 
     width = brick.x * 2, 
-    height = brick.y
+    height = brick.y - 8
   }
   
   ball = {
@@ -108,7 +108,8 @@ end
 
 function love.update(dt)
   anim:update(dt)
-  if not game_over then
+
+  if not game_over and in_motion then
     ticker = ticker + dt
   end
   if ticker >= tickrate then
