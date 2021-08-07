@@ -80,7 +80,7 @@ function love.load()
   }
 
   ticker = 0
-  tickrate = 7 -- second
+  tickrate = 10 -- second
 
   in_motion = false
   game_over = false
