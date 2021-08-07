@@ -206,13 +206,10 @@ function reset()
   randomize_colors(map, colors)
   fill_draw_map(map, draw_map, base, brick)
 
-  ball = {
-    radius = 20, 
-    vel = vec2d.unit(
+  ball.vel = vec2d.unit(
       vec2d{x = math.random() * 2 - 1, y = math.random() * 0.75 - 1}
-    ),
-    color = {255, 150, 143, 1}
-  }
+    )
+  ball.color = {255, 150, 143, 1}
   ball.x = paddle.x + paddle.width / 2
   ball.y = paddle.y - ball.radius
 
