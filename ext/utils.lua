@@ -82,17 +82,21 @@ function u.reflect_with_paddle(circle, object, speed)
 end
 
 function u.reflect_with_outline(circle, object)
-  if circle.x - circle.radius <= object.x or circle.x + circle.radius >= object.x + object.width then
+  local dx, dy = circle.vel.x * speed, circle.vel.y * speed
+
+  if circle.x - circle.radius + dx < object.x or circle.x + circle.radius + dx > object.x + object.width then
     circle.vel.x = -circle.vel.x
   end
 
-  if circle.y - circle.radius <= object.y then
+  if circle.y - circle.radius + dy < object.y then
     circle.vel.y = -circle.vel.y
   end
 end
 
 function u.ball_out_of_bounds(circle, object)
-  return circle.y + circle.radius >= object.y + object.height
+  local dy = circle.vel.y * speed
+
+  return circle.y + circle.radius + dy > object.y + object.height
 end
 
 --[[ TEST
