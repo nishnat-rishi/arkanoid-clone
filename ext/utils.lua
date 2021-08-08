@@ -70,11 +70,11 @@ end
 function u.reflect_with_paddle(circle, object, speed)
   local dx, dy = -circle.vel.x * speed, -circle.vel.y * speed
   if circle.x + circle.radius + dx < object.x or circle.x - circle.radius + dx > object.x + object.width then
-    circle.vel.y = ((circle.y - (paddle.y + paddle.height / 2)) / paddle.height) * 2
+    circle.vel.y = ((circle.y - (paddle.y + paddle.height / 2)) / paddle.height) * 2.5
     circle.vel.x = -circle.vel.x
   end
   if circle.y + circle.radius + dy < object.y or circle.y - circle.radius + dy > object.y + object.height then
-    circle.vel.x = ((circle.x - (paddle.x + paddle.width / 2)) / paddle.width) * 2
+    circle.vel.x = ((circle.x - (paddle.x + paddle.width / 2)) / paddle.width) * 2.5
     circle.vel.y = -circle.vel.y
   end
 

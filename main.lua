@@ -5,7 +5,19 @@ local anim = require('ext.anim')
 
 --[[ NOTES
 
-Collisions are whack! (NO LONGER WHACK!)
+  [ ] Some weird issues with paddle collision! When the ball hits the paddle
+      right near the vertex (right on it?), the ball's y-axis trajectory doesn't
+      reverse!!! WTF. This has caused me to lose a game while making a SUPERFLY
+      move! Punished for style!
+
+  [ ] Sounds?
+
+  [ ] Guns and stuff
+
+  ---
+  [X] (MADE) a random map filling function.
+
+  [X] Collisions are (NO LONGER) whack!
 
 --]]
 
@@ -18,6 +30,10 @@ function love.load()
   "123456789.,!?-+/():;%&`'*#=[]\"{}_")
   love.graphics.setFont(font)
 
+  hi_score_file = io.open('hiscore', 'r')
+  hi_score = hi_score_file:read("*n")
+  hi_score_file:close()
+
   love.graphics.setPointSize(2)
 
   colors = {
@@ -28,33 +44,9 @@ function love.load()
   }
   colors[0] = {0, 0, 0}
 
-  original_map = {
-    {1, 0, 1, 1, 1, 1, 0, 1},
-    {0, 0, 0, 1, 1, 0, 0, 0},
-    {0, 1, 0, 1, 1, 0, 1, 0},
-    {1, 0, 1, 1, 1, 1, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-  }
-
-  score_limit = u.count_blocks(original_map)
-  
-  map = u.copy2d(original_map)
-
-  base = {x = 80, y = 60}
+  dims = {x = 8, y = 10}
+  base = {x = 80, y = 80}
   brick = {x = 80, y = 40}
-  dims = {x = #map[1], y = #map}
-  
-  draw_map = {}
-
-  randomize_colors(map, colors)
-  fill_draw_map(map, draw_map, base, brick)
 
   paddle = {
     x = base.x, 
@@ -62,7 +54,7 @@ function love.load()
     width = brick.x * 2, 
     height = brick.y - 8
   }
-  
+
   ball = {
     radius = 20, 
     vel = vec2d.unit(
@@ -80,6 +72,13 @@ function love.load()
     height = dims.y * brick.y
   }
 
+  map = create_map(dims)
+  score_limit = u.count_blocks(map)
+  
+  draw_map = {}
+  randomize_colors(map, colors)
+  fill_draw_map(map, draw_map, base, brick)
+
   ticker = 0
   tickrate = 5 -- second
 
@@ -87,6 +86,7 @@ function love.load()
   game_over = false
 
   score = 0
+  total_score = 0
   speed = 7
 
   message = ''
@@ -133,10 +133,13 @@ end
 function love.draw()
 
   love.graphics.setColor(u.color(255, 255, 255))
-  love.graphics.print(message, 20, 20)
+  -- love.graphics.print(message, 20, 20)
 
   if not game_over then
-    love.graphics.print(string.format('Score: %d', score), 20, 20)
+    love.graphics.print(string.format(
+      'Hi-score: %d\nTotal Score: %d\nScore: %d', hi_score, total_score, score), 
+      20, 20
+    )
   end
 
   love.graphics.setColor(u.color(255, 255, 255))
@@ -158,20 +161,20 @@ function love.draw()
 
   love.graphics.setColor(u.color_r(ball.color))
   love.graphics.circle('line', ball.x, ball.y, ball.radius)
-  love.graphics.points(ball.x, ball.y)
+  -- love.graphics.points(ball.x, ball.y)
 
   if game_over then
     in_motion = false
     love.graphics.setColor(u.color(255, 255, 255))
     if game_won then
       love.graphics.printf(
-        string.format('You win!\nScore: %d\n Press \'R\' to restart.', score), 
+        string.format('You win!\nScore: %d\nTotal score: %d\n Click to start next level!', score, total_score), 
         base.x + (dims.x * brick.x) / 2 - 100, base.y + (dims.y * brick.y) / 2,
         200, 'center'
       )
     else
       love.graphics.printf(
-        string.format('GAME OVER!\nScore: %d\n Press \'R\' to restart.', score), 
+        string.format('GAME OVER!\nTotal score: %d\n Click or press \'R\' to restart.', total_score), 
         base.x + (dims.x * brick.x) / 2 - 100, base.y + (dims.y * brick.y) / 2,
         200, 'center'
       )
@@ -183,7 +186,11 @@ function love.mousereleased(x, y)
   if not game_over then
     in_motion = true
   else
-    reset()
+    if game_won then
+      reset_win()
+    else
+      reset_loss()
+    end
     in_motion = true
   end
 end
@@ -193,16 +200,38 @@ function love.mousemoved(x, y, dx, dy)
 end
 
 function love.keypressed(key)
-  if key == 'r' and game_over then
-    reset()
+  if game_over and not game_won and key == 'r' then
+    reset_loss()
   end
 end
 
+function create_map(dims)
+  local map = {}
+  for y = 1, dims.y / 2 do
+    map[y] = {}
+    for x = 1, dims.x / 2 do
+      map[y][x] = (math.random(2) - 1)
+    end
+    for x = dims.x / 2 + 1, dims.x do
+      map[y][x] = map[y][(dims.x + 1) - x]
+    end
+  end
+
+  for y = dims.y / 2 + 1, dims.y do
+    map[y] = {}
+    for x = 1, dims.x do
+      map[y][x] = 0
+    end
+  end
+
+  return map
+end
+
 function reset()
-  map = u.copy2d(original_map)
+  map = create_map(dims)
+  score_limit = u.count_blocks(map)
 
   draw_map = {}
-
   randomize_colors(map, colors)
   fill_draw_map(map, draw_map, base, brick)
 
@@ -215,9 +244,19 @@ function reset()
 
   in_motion = false
   game_over = false
+  game_won = false
 
   score = 0
   ticker = 0
+end
+
+function reset_win()
+  reset()
+end
+
+function reset_loss()
+  reset()
+  total_score = 0
 end
 
 function randomize_colors(map, colors)
@@ -267,6 +306,13 @@ function move(ball)
           item.color = 0
           score = score + 1
           if score >= score_limit then
+            total_score = total_score + score
+            if total_score > hi_score then
+              hi_score = total_score
+              hi_score_file = io.open('hiscore', 'w')
+              hi_score_file:write(string.format('%d', hi_score))
+              hi_score_file:close()
+            end
             game_won = true
             game_over = true
             anim:move{
