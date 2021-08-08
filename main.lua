@@ -15,6 +15,7 @@ local anim = require('ext.anim')
   [ ] Guns and stuff
 
   ---
+
   [X] (MADE) a random map filling function.
 
   [X] Collisions are (NO LONGER) whack!
@@ -169,14 +170,14 @@ function love.draw()
     if game_won then
       love.graphics.printf(
         string.format('You win!\nScore: %d\nTotal score: %d\n Click to start next level!', score, total_score), 
-        base.x + (dims.x * brick.x) / 2 - 100, base.y + (dims.y * brick.y) / 2,
-        200, 'center'
+        base.x + (dims.x * brick.x) / 2 - 150, base.y + (dims.y * brick.y) / 2,
+        300, 'center'
       )
     else
       love.graphics.printf(
         string.format('GAME OVER!\nTotal score: %d\n Click or press \'R\' to restart.', total_score), 
-        base.x + (dims.x * brick.x) / 2 - 100, base.y + (dims.y * brick.y) / 2,
-        200, 'center'
+        base.x + (dims.x * brick.x) / 2 - 150, base.y + (dims.y * brick.y) / 2,
+        300, 'center'
       )
     end
   end
